@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 # Constants
 EAR_THRESHOLD = 0.25
-CONSECUTIVE_FRAMES = 1  # Reduced from 3 to catch fast blinks at 200ms interval
-MOVEMENT_THRESHOLD = 15  # Reduced from 20 for better sensitivity
+CONSECUTIVE_FRAMES = 1
+MOVEMENT_THRESHOLD = 20  # Increased slightly from 15 for more robust detection
 
 CHALLENGES = {
     "blink_twice": "Blink twice",
@@ -141,18 +141,19 @@ def verify_liveness(frames_base64: list, challenge_id: str):
     # However, depending on frontend mirroring, we should check for significant delta.
     
     if challenge_id == "turn_left":
-        # Check if nose moved significantly in either horizontal direction 
-        # (Assuming 'left' is a relative horizontal movement > threshold)
-        if abs(min_x_dist) > MOVEMENT_THRESHOLD or abs(max_x_dist) > MOVEMENT_THRESHOLD:
+        # Moving head LEFT (user's perspective) -> Nose moves RIGHT in image (x increases)
+        if max_x_dist > MOVEMENT_THRESHOLD:
             return True, "Liveness verified: Head turn LEFT successful"
-        return False, "Liveness verification failed: Head turn LEFT not detected"
+        return False, f"Liveness verification failed: Head turn LEFT not detected (Max DX: {max_x_dist:.1f})"
 
     if challenge_id == "turn_right":
-        if abs(max_x_dist) > MOVEMENT_THRESHOLD or abs(min_x_dist) > MOVEMENT_THRESHOLD:
+        # Moving head RIGHT (user's perspective) -> Nose moves LEFT in image (x decreases)
+        if min_x_dist < -MOVEMENT_THRESHOLD:
             return True, "Liveness verified: Head turn RIGHT successful"
-        return False, "Liveness verification failed: Head turn RIGHT not detected"
+        return False, f"Liveness verification failed: Head turn RIGHT not detected (Min DX: {min_x_dist:.1f})"
 
     if challenge_id == "nod_up_down":
+        # Nodding involves both up and down, but we check for significant vertical movement
         if abs(max_y_dist) > MOVEMENT_THRESHOLD or abs(min_y_dist) > MOVEMENT_THRESHOLD:
             return True, "Liveness verified: Head nod successful"
         return False, "Liveness verification failed: Head nod not detected"
