@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 
 # Database credentials from environment variables
 DB_USER = config("DB_USER", default="root")
-DB_PASSWORD = config("DB_PASSWORD", default="Nish@123")
+DB_PASSWORD = config("DB_PASSWORD", default="PASSWORD")
 DB_HOST = config("DB_HOST", default="localhost")
 DB_NAME = config("DB_NAME", default="selfie_attendance")
 
